@@ -101,7 +101,7 @@ resource "talos_machine_bootstrap" "this" {
   }
 }
 
-data "talos_cluster_kubeconfig" "this" {
+resource "talos_cluster_kubeconfig" "this" {
   client_configuration = talos_machine_secrets.this.client_configuration
   node                 = hcloud_server.controlplane[0].ipv4_address
 

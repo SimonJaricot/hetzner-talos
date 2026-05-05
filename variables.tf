@@ -44,13 +44,13 @@ variable "worker_count" {
 variable "controlplane_server_type" {
   description = "Hetzner server type for control plane nodes"
   type        = string
-  default     = "cx22"
+  default     = "cx23"
 }
 
 variable "worker_server_type" {
   description = "Hetzner server type for worker nodes"
   type        = string
-  default     = "cx22"
+  default     = "cx23"
 }
 
 variable "lb_type" {

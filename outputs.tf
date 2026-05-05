@@ -36,6 +36,6 @@ output "talosconfig" {
 
 output "kubeconfig" {
   description = "Kubernetes client configuration (kubeconfig) — server is load_balancer_ip:6443"
-  value       = data.talos_cluster_kubeconfig.this.kubeconfig_raw
+  value       = talos_cluster_kubeconfig.this.kubeconfig_raw
   sensitive   = true
 }
