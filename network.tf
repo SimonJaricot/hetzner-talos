@@ -21,12 +21,12 @@ resource "hcloud_firewall" "this" {
     source_ips = ["0.0.0.0/0", "::/0"]
   }
 
-  # Talos API (needed for machine config apply and talosctl)
+  # Talos API — restrict to operator CIDRs in production via talos_api_allowed_cidrs
   rule {
     direction  = "in"
     protocol   = "tcp"
     port       = "50000"
-    source_ips = ["0.0.0.0/0", "::/0"]
+    source_ips = var.talos_api_allowed_cidrs
   }
 
   # ICMP

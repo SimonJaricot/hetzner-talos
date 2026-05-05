@@ -7,6 +7,11 @@ resource "hcloud_placement_group" "controlplane" {
   type = "spread"
 }
 
+resource "hcloud_placement_group" "worker" {
+  name = "${var.cluster_name}-worker"
+  type = "spread"
+}
+
 resource "hcloud_server" "controlplane" {
   count              = var.controlplane_count
   name               = "${var.cluster_name}-cp-${count.index + 1}"
@@ -38,12 +43,13 @@ resource "hcloud_server_network" "controlplane" {
 }
 
 resource "hcloud_server" "worker" {
-  count       = var.worker_count
-  name        = "${var.cluster_name}-worker-${count.index + 1}"
-  server_type = var.worker_server_type
-  image       = var.talos_image_id
-  location    = var.location
-  ssh_keys    = [data.hcloud_ssh_key.this.id]
+  count              = var.worker_count
+  name               = "${var.cluster_name}-worker-${count.index + 1}"
+  server_type        = var.worker_server_type
+  image              = var.talos_image_id
+  location           = var.location
+  placement_group_id = hcloud_placement_group.worker.id
+  ssh_keys           = [data.hcloud_ssh_key.this.id]
 
   public_net {
     ipv4_enabled = true
@@ -66,11 +72,14 @@ resource "hcloud_server_network" "worker" {
   subnet_id = hcloud_network_subnet.this.id
 }
 
-# Load balancer for HA control plane endpoint
 resource "hcloud_load_balancer" "controlplane" {
   name               = "${var.cluster_name}-controlplane"
-  load_balancer_type = "lb11"
+  load_balancer_type = var.lb_type
   location           = var.location
+
+  algorithm {
+    type = "round_robin"
+  }
 
   labels = {
     cluster = var.cluster_name
@@ -79,7 +88,7 @@ resource "hcloud_load_balancer" "controlplane" {
 
 resource "hcloud_load_balancer_network" "controlplane" {
   load_balancer_id = hcloud_load_balancer.controlplane.id
-  network_id       = hcloud_network.this.id
+  subnet_id        = hcloud_network_subnet.this.id
 }
 
 resource "hcloud_load_balancer_service" "kube_api" {
@@ -87,6 +96,14 @@ resource "hcloud_load_balancer_service" "kube_api" {
   protocol         = "tcp"
   listen_port      = 6443
   destination_port = 6443
+
+  health_check {
+    protocol = "tcp"
+    port     = 6443
+    interval = 15
+    timeout  = 10
+    retries  = 3
+  }
 }
 
 resource "hcloud_load_balancer_target" "controlplane" {
