@@ -54,7 +54,7 @@ resource "hcloud_firewall" "this" {
 
 resource "hcloud_firewall_attachment" "this" {
   firewall_id    = hcloud_firewall.this.id
-  label_selector = "cluster=${var.cluster_name}"
+  label_selectors = ["cluster=${var.cluster_name}"]
 
   depends_on = [
     hcloud_server.controlplane,
